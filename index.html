@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SISTEM ERROR</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #ff0000;
+        }
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .kotak {
+            text-align: center;
+        }
+        .kode {
+            font-size: 60px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px red;
+        }
+        .pesan {
+            font-size: 22px;
+            margin-bottom: 30px;
+        }
+        .tombol {
+            padding: 12px 30px;
+            font-size: 16px;
+            border: 1px solid red;
+            background: transparent;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .tombol:hover {
+            background: red;
+            color: black;
+        }
+        .tombol:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* TAMPILAN LOADING */
+        .wadah-load {
+            display: none;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .teks-load {
+            color: #0f0;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        .bar {
+            width: 100%;
+            height: 25px;
+            border: 1px solid #0f0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .isi-bar {
+            height: 100%;
+            width: 0%;
+            background: #0f0;
+            transition: width 0.1s linear;
+        }
+        .persen {
+            color: #0f0;
+            font-size: 16px;
+            margin-top: 8px;
+        }
+        .gagal {
+            color: red;
+            margin-top: 20px;
+            font-size: 20px;
+            display: none;
+            animation: getar 0.1s infinite;
+        }
+
+        @keyframes getar {
+            0% { transform: translate(-1px, 1px); }
+            25% { transform: translate(1px, -1px); }
+            50% { transform: translate(-1px, -1px); }
+            75% { transform: translate(1px, 1px); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- TAMPILAN AWAL -->
+<div class="kotak" id="awal">
+    <div class="kode">404</div>
+    <div class="pesan">KESALAHAN SISTEM</div>
+    <button class="tombol" onclick="mulaiPerbaiki()">PERBAIKI SISTEM</button>
+</div>
+
+<!-- TAMPILAN LOADING -->
+<div class="wadah-load" id="layar-load">
+    <div class="teks-load">Sedang memperbaiki sistem...</div>
+    <div class="bar">
+        <div class="isi-bar" id="proses"></div>
+    </div>
+    <div class="persen" id="nilai">0%</div>
+    <div class="gagal" id="pesan-error">❌ GAGAL! TERJADI KESALAHAN TAK TERDUGA</div>
+</div>
+
+<script>
+function mulaiPerbaiki() {
+    // Sembunyi tampilan awal
+    document.getElementById('awal').style.display = 'none';
+    // Munculkan layar loading
+    document.getElementById('layar-load').style.display = 'block';
+
+    let persen = 0;
+    const bar = document.getElementById('proses');
+    const teks = document.getElementById('nilai');
+    const error = document.getElementById('pesan-error');
+
+    // Jalanin loading
+    const jalan = setInterval(() => {
+        persen++;
+        bar.style.width = persen + '%';
+        teks.innerText = persen + '%';
+
+        // Pas nyampe 99% berhenti lalu muncul error
+        if(persen === 99) {
+            clearInterval(jalan);
+            setTimeout(() => {
+                error.style.display = 'block';
+                teks.innerText = 'GAGAL!';
+                bar.style.background = 'red';
+            }, 800);
+        }
+    }, 50);
+}
+</script>
+
+</body>
+</html>
