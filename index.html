@@ -1,150 +1,473 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SISTEM ERROR</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Courier New', monospace;
-            background: #000;
-            color: #ff0000;
-        }
-        body {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        .kotak {
-            text-align: center;
-        }
-        .kode {
-            font-size: 60px;
-            font-weight: bold;
-            margin-bottom: 20px;
-            text-shadow: 0 0 10px red;
-        }
-        .pesan {
-            font-size: 22px;
-            margin-bottom: 30px;
-        }
-        .tombol {
-            padding: 12px 30px;
-            font-size: 16px;
-            border: 1px solid red;
-            background: transparent;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .tombol:hover {
-            background: red;
-            color: black;
-        }
-        .tombol:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>System Access</title>
+<style>
+  /* ============ DESIGN TOKENS ============ */
+  :root {
+    --bg: #0a0e17;
+    --surface: rgba(255, 255, 255, 0.05);
+    --border: rgba(0, 200, 255, 0.2);
+    --text: #e6edf3;
+    --muted: #8b98a5;
+    --accent: #00c8ff;
+    --accent-2: #0072ff;
+    --danger: #ff4d6d;
+    --radius: 12px;
+    --font: 'Segoe UI', system-ui, sans-serif;
+  }
 
-        /* TAMPILAN LOADING */
-        .wadah-load {
-            display: none;
-            width: 90%;
-            max-width: 400px;
-            text-align: center;
-        }
-        .teks-load {
-            color: #0f0;
-            font-size: 18px;
-            margin-bottom: 10px;
-        }
-        .bar {
-            width: 100%;
-            height: 25px;
-            border: 1px solid #0f0;
-            border-radius: 5px;
-            overflow: hidden;
-        }
-        .isi-bar {
-            height: 100%;
-            width: 0%;
-            background: #0f0;
-            transition: width 0.1s linear;
-        }
-        .persen {
-            color: #0f0;
-            font-size: 16px;
-            margin-top: 8px;
-        }
-        .gagal {
-            color: red;
-            margin-top: 20px;
-            font-size: 20px;
-            display: none;
-            animation: getar 0.1s infinite;
-        }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        @keyframes getar {
-            0% { transform: translate(-1px, 1px); }
-            25% { transform: translate(1px, -1px); }
-            50% { transform: translate(-1px, -1px); }
-            75% { transform: translate(1px, 1px); }
-        }
-    </style>
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  /* ============ PAGE SYSTEM ============ */
+  .page {
+    display: none;
+    width: 100%;
+    max-width: 420px;
+    padding: 32px 24px;
+    text-align: center;
+  }
+  .page.active {
+    display: block;
+    animation: fadeIn 0.4s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ============ SHARED COMPONENTS ============ */
+  .loader-ring {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 28px;
+    border: 4px solid rgba(0, 200, 255, 0.15);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-text {
+    font-size: 15px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  /* Animated dots via CSS-only element */
+  .dots {
+    display: inline-block;
+    width: 1.2em;
+    text-align: left;
+  }
+  .dots::after {
+    content: '';
+    animation: dots 1.5s steps(4, end) infinite;
+  }
+  @keyframes dots {
+    0%   { content: ''; }
+    25%  { content: '.'; }
+    50%  { content: '..'; }
+    75%  { content: '...'; }
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 3px;
+    margin-top: 24px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    border-radius: 3px;
+    transition: width 0.2s ease;
+  }
+
+  .btn {
+    width: 100%;
+    padding: 15px;
+    margin-top: 18px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--radius);
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #fff;
+    cursor: pointer;
+    transition: transform 0.15s, opacity 0.15s;
+  }
+  .btn:hover  { transform: translateY(-2px); }
+  .btn:active { transform: translateY(0); opacity: 0.85; }
+
+  .title    { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
+  .subtitle { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
+
+  .icon-lg { font-size: 64px; margin-bottom: 20px; }
+
+  .hidden { display: none !important; }
+
+  /* ============ PAGE 2: PASSWORD ============ */
+  .lock-icon { font-size: 56px; margin-bottom: 20px; }
+
+  .pin-input {
+    width: 100%;
+    padding: 16px;
+    font-size: 24px;
+    text-align: center;
+    letter-spacing: 12px;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    color: #fff;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .pin-input:focus { border-color: var(--accent); }
+
+  .error-msg {
+    color: var(--danger);
+    font-size: 14px;
+    margin-top: 14px;
+    min-height: 20px;
+    font-weight: 500;
+  }
+
+  .shake { animation: shake 0.4s ease; }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25%      { transform: translateX(-8px); }
+    75%      { transform: translateX(8px); }
+  }
+
+  /* ============ PAGE 3: DATA STOLEN ============ */
+  .danger-icon { animation: pulse 1.5s ease infinite; }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50%      { transform: scale(1.08); opacity: 0.75; }
+  }
+
+  .danger-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--danger);
+    margin-bottom: 12px;
+  }
+  .danger-desc {
+    font-size: 15px;
+    color: #c9d1d9;
+    line-height: 1.6;
+    margin-bottom: 32px;
+  }
+
+  .restore-btn {
+    width: 100%;
+    padding: 15px;
+    font-size: 16px;
+    font-weight: 600;
+    border: 2px solid var(--danger);
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--danger);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .restore-btn:hover { background: var(--danger); color: #fff; }
+
+  /* ============ PAGE 4: RESTORE ============ */
+  .restore-status {
+    font-size: 15px;
+    color: var(--muted);
+    margin-top: 24px;
+    min-height: 24px;
+  }
+
+  .fail-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--danger);
+    margin-bottom: 12px;
+  }
+  .fail-desc {
+    font-size: 15px;
+    color: #c9d1d9;
+    line-height: 1.6;
+    margin-bottom: 28px;
+  }
+
+  .x-icon { color: var(--danger); }
+
+  .retry-btn {
+    width: 100%;
+    padding: 15px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--radius);
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .retry-btn:hover { background: rgba(255, 255, 255, 0.15); }
+</style>
 </head>
 <body>
 
-<!-- TAMPILAN AWAL -->
-<div class="kotak" id="awal">
-    <div class="kode">404</div>
-    <div class="pesan">KESALAHAN SISTEM</div>
-    <button class="tombol" onclick="mulaiPerbaiki()">PERBAIKI SISTEM</button>
-</div>
+<!-- ================= PAGE 1: LOADING ================= -->
+<section id="page1" class="page active" aria-label="Memuat sistem">
+  <div class="loader-ring" aria-hidden="true"></div>
+  <p class="loading-text">Menginisialisasi sistem<span class="dots"></span></p>
+  <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+</section>
 
-<!-- TAMPILAN LOADING -->
-<div class="wadah-load" id="layar-load">
-    <div class="teks-load">Sedang memperbaiki sistem...</div>
-    <div class="bar">
-        <div class="isi-bar" id="proses"></div>
-    </div>
-    <div class="persen" id="nilai">0%</div>
-    <div class="gagal" id="pesan-error">❌ GAGAL! TERJADI KESALAHAN TAK TERDUGA</div>
-</div>
+<!-- ================= PAGE 2: PASSWORD ================= -->
+<section id="page2" class="page" aria-label="Masukkan sandi">
+  <div class="lock-icon" aria-hidden="true">🔒</div>
+  <h2 class="title">Akses Terkunci</h2>
+  <p class="subtitle">Masukkan sandi untuk melanjutkan</p>
+  <input
+    type="password"
+    id="pinInput"
+    class="pin-input"
+    inputmode="numeric"
+    maxlength="4"
+    placeholder="••••"
+    autocomplete="off"
+    aria-label="Sandi 4 digit"
+  >
+  <button class="btn" id="submitBtn">Buka</button>
+  <p class="error-msg" id="errorMsg" aria-live="polite"></p>
+</section>
+
+<!-- ================= PAGE 3: DATA STOLEN ================= -->
+<section id="page3" class="page" aria-label="Data telah diambil">
+  <div class="icon-lg danger-icon" aria-hidden="true">⚠️</div>
+  <div class="danger-title">DATA ANDA TELAH DIAMBIL</div>
+  <p class="danger-desc">
+    Akses tidak sah terdeteksi. Seluruh data pada perangkat ini
+    telah dikompromikan oleh pihak tidak dikenal.
+  </p>
+  <button class="restore-btn" id="restoreBtn">Pulihkan</button>
+</section>
+
+<!-- ================= PAGE 4: RESTORE ================= -->
+<section id="page4" class="page" aria-label="Pemulihan data">
+  <!-- State: loading -->
+  <div id="restoreLoading">
+    <div class="loader-ring" aria-hidden="true"></div>
+    <p class="loading-text">Memulihkan data<span class="dots"></span></p>
+    <p class="restore-status" id="restoreStatus" aria-live="polite">
+      Mencoba menghubungi server...
+    </p>
+  </div>
+
+  <!-- State: gagal -->
+  <div id="restoreFail" class="hidden" aria-live="assertive">
+    <div class="icon-lg x-icon" aria-hidden="true">✖</div>
+    <div class="fail-title">PEMULIHAN GAGAL</div>
+    <p class="fail-desc">
+      Server pemulihan tidak merespons. Data tidak dapat
+      dikembalikan. Silakan hubungi administrator.
+    </p>
+    <button class="retry-btn" id="retryBtn">Coba Lagi</button>
+  </div>
+</section>
 
 <script>
-function mulaiPerbaiki() {
-    // Sembunyi tampilan awal
-    document.getElementById('awal').style.display = 'none';
-    // Munculkan layar loading
-    document.getElementById('layar-load').style.display = 'block';
+/* =====================================================================
+   BETOx1 — Refactored App
+   Struktur:
+     1. Konstanta & elemen
+     2. Router mini
+     3. Utilitas (delay, progress)
+     4. Fitur: Boot  /  Auth  /  Restore
+     5. Bootstrap
+   ===================================================================== */
+(() => {
+  'use strict';
 
-    let persen = 0;
-    const bar = document.getElementById('proses');
-    const teks = document.getElementById('nilai');
-    const error = document.getElementById('pesan-error');
+  // ---------- 1. KONSTANTA & ELEMEN ----------
+  const PIN = '1121';
+  const BOOT_TIME  = 1600;  // durasi halaman 1
+  const RESTORE_TIME = 4200; // durasi loading sebelum gagal
 
-    // Jalanin loading
-    const jalan = setInterval(() => {
-        persen++;
-        bar.style.width = persen + '%';
-        teks.innerText = persen + '%';
+  const $ = (id) => document.getElementById(id);
 
-        // Pas nyampe 99% berhenti lalu muncul error
-        if(persen === 99) {
-            clearInterval(jalan);
-            setTimeout(() => {
-                error.style.display = 'block';
-                teks.innerText = 'GAGAL!';
-                bar.style.background = 'red';
-            }, 800);
+  const el = {
+    pages:           document.querySelectorAll('.page'),
+    progressFill:    $('progressFill'),
+    pinInput:        $('pinInput'),
+    submitBtn:       $('submitBtn'),
+    errorMsg:        $('errorMsg'),
+    restoreBtn:      $('restoreBtn'),
+    restoreLoading:  $('restoreLoading'),
+    restoreFail:     $('restoreFail'),
+    restoreStatus:   $('restoreStatus'),
+    retryBtn:        $('retryBtn'),
+  };
+
+  // ---------- 2. ROUTER MINI ----------
+  const Router = {
+    current: 'page1',
+    go(id) {
+      if (this.current === id) return;
+      el.pages.forEach(p => p.classList.toggle('active', p.id === id));
+      this.current = id;
+      // fokus otomatis untuk aksesibilitas
+      if (id === 'page2') el.pinInput.focus();
+    }
+  };
+
+  // ---------- 3. UTILITAS ----------
+  const delay = (ms) => new Promise(res => setTimeout(res, ms));
+
+  /**
+   * Jalankan progress bar sampai 100%, lalu resolve.
+   * Menggunakan requestAnimationFrame agar halus & bisa dibatalkan.
+   */
+  function runProgress(bar, durationMs) {
+    return new Promise(resolve => {
+      const start = performance.now();
+      bar.style.width = '0%';
+
+      function frame(now) {
+        const pct = Math.min((now - start) / durationMs, 1);
+        bar.style.width = `${pct * 100}%`;
+        if (pct < 1) {
+          requestAnimationFrame(frame);
+        } else {
+          resolve();
         }
-    }, 50);
-}
+      }
+      requestAnimationFrame(frame);
+    });
+  }
+
+  // ---------- 4a. FITUR: BOOT (Halaman 1) ----------
+  async function boot() {
+    await runProgress(el.progressFill, BOOT_TIME);
+    await delay(250);
+    Router.go('page2');
+  }
+
+  // ---------- 4b. FITUR: AUTH (Halaman 2) ----------
+  function verifyPin(input) {
+    return input.trim() === PIN;
+  }
+
+  let authLocked = false;
+
+  function handleAuth() {
+    if (authLocked) return;
+
+    const ok = verifyPin(el.pinInput.value);
+    el.errorMsg.textContent = ok ? '' : 'Sandi salah!';
+
+    if (!ok) {
+      // feedback visual singkat sebelum pindah
+      authLocked = true;
+      el.pinInput.parentElement.classList.add('shake');
+      setTimeout(() => {
+        el.pinInput.parentElement.classList.remove('shake');
+        authLocked = false;
+        Router.go('page3');   // sesuai spesifikasi: salah → halaman 3
+      }, 600);
+    } else {
+      // benar → halaman 3 (sesuai spesifikasi saat ini)
+      Router.go('page3');
+    }
+  }
+
+  function bindAuth() {
+    el.submitBtn.addEventListener('click', handleAuth);
+    el.pinInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleAuth();
+    });
+  }
+
+  // ---------- 4c. FITUR: RESTORE (Halaman 3 & 4) ----------
+  const restoreMessages = [
+    { at: 900,  text: 'Memverifikasi identitas...' },
+    { at: 1800, text: 'Mengunduh cadangan data...' },
+    { at: 2800, text: 'Menggabungkan file...' },
+  ];
+
+  let restoreTimers = [];
+  let restoreRunning = false;
+
+  function clearRestoreTimers() {
+    restoreTimers.forEach(clearTimeout);
+    restoreTimers = [];
+  }
+
+  function startRestore() {
+    if (restoreRunning) return;
+    restoreRunning = true;
+
+    // reset state
+    el.restoreLoading.classList.remove('hidden');
+    el.restoreFail.classList.add('hidden');
+    el.restoreStatus.textContent = 'Mencoba menghubungi server...';
+
+    // pesan bertahap
+    restoreMessages.forEach(({ at, text }) => {
+      const t = setTimeout(() => {
+        if (!el.restoreLoading.classList.contains('hidden')) {
+          el.restoreStatus.textContent = text;
+        }
+      }, at);
+      restoreTimers.push(t);
+    });
+
+    // selesai → gagal
+    const done = setTimeout(() => {
+      el.restoreLoading.classList.add('hidden');
+      el.restoreFail.classList.remove('hidden');
+      restoreRunning = false;
+    }, RESTORE_TIME);
+    restoreTimers.push(done);
+  }
+
+  function bindRestore() {
+    el.restoreBtn.addEventListener('click', () => {
+      Router.go('page4');
+      startRestore();
+    });
+
+    el.retryBtn.addEventListener('click', () => {
+      clearRestoreTimers();
+      startRestore();
+    });
+  }
+
+  // ---------- 5. BOOTSTRAP ----------
+  function init() {
+    bindAuth();
+    bindRestore();
+    boot();
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+})();
 </script>
 
 </body>
